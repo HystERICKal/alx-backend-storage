@@ -1,0 +1,2 @@
+// This script is a regex filter
+db.school.find({ name: /Holberton.*/ }).forEach(printjson);
