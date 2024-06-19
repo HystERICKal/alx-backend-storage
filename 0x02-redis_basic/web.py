@@ -1,32 +1,40 @@
 #!/usr/bin/env python3
 """Implement an expiring web cache and tracker."""
+
+
 import redis
 import requests
 from functools import wraps
-from typing import Callable
-
 
 temp_1 = redis.Redis()
-"""Implement an expiring web cache and tracker."""
 
 
-def data_cacher(method: Callable) -> Callable:
+def url_access_count(method):
     """Implement an expiring web cache and tracker."""
     @wraps(method)
-    def invoker(url) -> str:
+    def wrapper(url):
         """Implement an expiring web cache and tracker."""
-        temp_1.incr(f'count:{url}')
-        result = temp_1.get(f'result:{url}')
-        if result:
-            return result.decode('utf-8')
-        result = method(url)
-        temp_1.set(f'count:{url}', 0)
-        temp_1.setex(f'result:{url}', 10, result)
-        return result
-    return invoker
+        temp_2 = "cached:" + url
+        temp_3 = temp_1.get(temp_2)
+        if temp_3:
+            return temp_3.decode("utf-8")
+
+        temp_4 = "count:" + url
+        temp_5 = method(url)
+
+        temp_1.incr(temp_4)
+        temp_1.set(temp_2, temp_5, ex=10)
+        temp_1.expire(temp_2, 10)
+        return temp_5
+    return wrapper
 
 
-@data_cacher
+@url_access_count
 def get_page(url: str) -> str:
     """Implement an expiring web cache and tracker."""
-    return requests.get(url).text
+    outcome = requests.get(url)
+    return outcome.text
+
+
+if __name__ == "__main__":
+    get_page('http://slowwly.robertomurray.co.uk')
